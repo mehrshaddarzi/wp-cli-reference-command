@@ -33,35 +33,9 @@ SYNOPSIS
 wp reference absint
 ```
 result :
-```
-# Structure
 
-  absint( mixed $maybeint );
+![](https://raw.githubusercontent.com/mehrshaddarzi/wp-cli-reference-command/master/screenshot-1.jpg)
 
-Summary   : Convert a value to non-negative integer.
-Reference : Function
-Url       : https://developer.wordpress.org/reference/functions/absint/
-Source    : wp-includes/functions.php:4283
-
-# Parameters
-
- $maybeint
-  (mixed) {Required}
-    Data you wish to have converted to a non-negative integer.
-
-
-# Return
-
- (int) A non-negative integer.
-
-# Changelog
-
-+---------+-------------+
-| Version | Description |
-+---------+-------------+
-| 2.5.0   | Introduced. |
-+---------+-------------+
-```
 
 if your search results from more than one item.
 for example :
@@ -72,17 +46,7 @@ wp reference wp_insert_post
 
 You will see a list to choose from.
 
-````
-1. wp_insert_user() [Function]
-     Source: wp-includes/user.php:1519
-      Insert a user into the database.
-
-2. wp_create_user() [Function]
-     Source: wp-includes/user.php:2113
-      A simpler way of inserting a user into the database.
-
-Please type the number list and press enter key :
-````
+![](https://raw.githubusercontent.com/mehrshaddarzi/wp-cli-reference-command/master/screenshot-2.jpg)
 
 ### Custom Search
 
