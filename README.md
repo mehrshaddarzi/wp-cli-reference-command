@@ -1,156 +1,142 @@
-# WP-CLI Login Command
+# WP-CLI Reference Command
 
-Login to WordPress with secure passwordless links.
+WordPress Code Reference in WP-CLI.
 
-[![Build Status](https://travis-ci.org/aaemnnosttv/wp-cli-login-command.svg?branch=master)](https://travis-ci.org/aaemnnosttv/wp-cli-login-command)
-[![Packagist](https://img.shields.io/packagist/v/aaemnnosttv/wp-cli-login-command.svg)](https://packagist.org/packages/aaemnnosttv/wp-cli-login-command)
+Quick links: [Installation](#installation) | [Using](#using) | [Contributing](#contributing)
 
-Quick links: [Using](#using) | [Installation](#installation) | [Contributing](#contributing)
+## Installation
+
+you can install this package with `wp package install mehrshaddarzi/wp-cli-reference-command`.
+
+Installing this package requires WP-CLI v2 or greater. Update to the latest stable release with `wp cli update`.
 
 ## Using
 
 ```
 NAME
 
-  wp login
+  wp reference
 
 DESCRIPTION
 
-  Manage magic passwordless sign-in.
+  WordPress Code Reference.
 
 SYNOPSIS
 
-  wp login <command>
-
-SUBCOMMANDS
-
-  create          Create a magic sign-in link for the given user.
-  email           Email a magic sign-in link to the given user.
-  install         Install/update the companion server plugin.
-  invalidate      Invalidate any existing magic links.
-  toggle          Toggle the active state of the companion server plugin.
+  wp reference <class|method|function|hook>
 
 ```
 
-### `create` / `as`
+### Search and show document
 
 ```
-wp login create <user> [options]
+wp reference absint
 ```
-or alternatively use the alias
+result :
 ```
-wp login as <user> [options]
-```
+# Structure
 
-Create a magic sign-in link for the given user.  Outputs the created URL with some extra information for the user regarding usage and expiration.  URLs expire 15 minutes after creation ([configurable](#--expiresseconds)), or at the time of use, whichever comes first.
+  absint( mixed $maybeint );
 
-> `<user>` can be passed as an User ID, username/login or email address. This is the same for all `login` commands which accept this as a parameter.
+Summary   : Convert a value to non-negative integer.
+Reference : Function
+Url       : https://developer.wordpress.org/reference/functions/absint/
+Source    : wp-includes/functions.php:4283
 
-#### `--expires=<seconds>`
+# Parameters
 
-Set the lifetime of the magic link in seconds.
-
-    10 minutes = 600  
-    1 hour     = 3600  
-    1 day      = 86400
-
-Default: `900` (15 minutes)
+ $maybeint
+  (mixed) {Required}
+    Data you wish to have converted to a non-negative integer.
 
 
-#### `--url-only`
+# Return
 
-Outputs the created sign-in URL only. Great for scripting, piping to your clipboard, or anything else you can think of.
+ (int) A non-negative integer.
 
-#### `--launch`
+# Changelog
 
-Launches the sign-in link your default browser immediately after creation.  This is the fastest possible way to login.
-
-### `email`
-
-```
-wp login email <user> [options]
++---------+-------------+
+| Version | Description |
++---------+-------------+
+| 2.5.0   | Introduced. |
++---------+-------------+
 ```
 
-Email a magic sign-in link to the given user.  Sends a nice HTML email to the user's email address containing their freshly created magic sign-in link.  Planning to add support for both HTML and plain text emails in the future.
+if your search results more than one item. 
+for example :
 
-#### `--expires=<seconds>`
+````
+wp reference wp_insert_post
+````
 
-[See above.](#--expiresseconds)
+You will see a list to choose from.
 
-#### `--template=<path-to-custom-template>`
+````
+1. wp_insert_user() [Function]
+     Source: wp-includes/user.php:1519
+      Insert a user into the database.
 
-Optionally override the default email template with your own by providing the path to a different template file to use.
-The email template is compiled using the Mustache template engine, so you may use the `{{ magic_url }}` and `{{ domain }}` placeholders in your custom template.  The default template can be found in this repository under `template/email-default.mustache`.
+2. wp_create_user() [Function]
+     Source: wp-includes/user.php:2113
+      A simpler way of inserting a user into the database.
+      
+Please enter the number list : 
+````
 
-### `install`
+### Custom Search
 
-```
-wp login install [options]
-```
+by default WP_CLI reference package search between all WordPress class and functions.
 
-Install/update the companion server plugin.  Installing the companion plugin is required before magic links will work on the host.
-The `login` command is aware of the installed version of the plugin, and will inform you if it needs to be installed, activated or upgraded.
-If the plugin is already installed, you will be prompted to overwrite it.
+if you want custom search :
 
-#### `--activate`
+````
+wp reference --class=wp_user
+````
 
-Optionally activate the plugin immediately after installation.
+or
 
-#### `--yes`
+````
+wp reference --funcion=wp_insert_post
+````
 
-Suppress prompting for confirmation to overwrite the existing plugin.
+or
 
-> Using a Composer-based WordPress install? You can require the companion plugin using the package `aaemnnosttv/wp-cli-login-server`.
+````
+wp reference --method=get_row
+````
 
-### `invalidate`
+or
 
-```
-wp login invalidate
-```
+````
+wp reference --hook=admin_footer
+````
 
-Invalidate any existing magic sign-in links.  Any previously created links will most likely go to a 404 page.
 
-### `toggle`
+### Show in Web Browser
 
-```
-wp login toggle [<on|off>]
-```
+you can show WordPress reference code in Web browser after search with :
 
-Toggles the active status of the companion plugin.  Optionally pass `on` or `off` to set the activation accordingly. Without it, the status is simply inverted.
+````
+wp reference --browser
+````
 
-## Installation
+### Cache system
 
-Installing this package requires WP-CLI v0.23.0 or greater. Update to the latest stable release with `wp cli update`.
+by default WP-CLI cached 100 last searches for speed result. if you want remove reference cache :
 
-Once you've done so, you can install this package with `wp package install aaemnnosttv/wp-cli-login-command`.
+````
+wp cli cache clear
+````
+
+if you want only removed reference cache :
+
+````
+wp reference --clear
+````
 
 ## Contributing
 
 We appreciate you taking the initiative to contribute to this project.
 
 Contributing isn’t limited to just code. We encourage you to contribute in the way that best fits your abilities, by writing tutorials, giving a demo at your local meetup, helping other users with their support questions, or revising our documentation.
-
-### Reporting a bug
-
-Think you’ve found a bug? We’d love for you to help us get it fixed.
-
-Before you create a new issue, you should [search existing issues](https://github.com/aaemnnosttv/wp-cli-login-command/issues?q=label%3Abug%20) to see if there’s an existing resolution to it, or if it’s already been fixed in a newer version.
-
-Once you’ve done a bit of searching and discovered there isn’t an open or fixed issue for your bug, please [create a new issue](https://github.com/aaemnnosttv/wp-cli-login-command/issues/new) with the following:
-
-1. What you were doing (e.g. "When I run `wp post list`").
-2. What you saw (e.g. "I see a fatal about a class being undefined.").
-3. What you expected to see (e.g. "I expected to see the list of posts.")
-
-Include as much detail as you can, and clear steps to reproduce if possible.
-
-### Creating a pull request
-
-Want to contribute a new feature? Please first [open a new issue](https://github.com/aaemnnosttv/wp-cli-login-command/issues/new) to discuss whether the feature is a good fit for the project.
-
-Once you've decided to commit the time to seeing your pull request through, please follow our guidelines for creating a pull request to make sure it's a pleasant experience:
-
-1. Create a feature branch for each contribution.
-2. Submit your pull request early for feedback.
-3. Include functional tests with your changes. [Read the WP-CLI documentation](https://wp-cli.org/docs/pull-requests/#functional-tests) for an introduction.
-4. Follow [PSR-2 Coding Standards](http://www.php-fig.org/psr/psr-2/).
