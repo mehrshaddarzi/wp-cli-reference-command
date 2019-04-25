@@ -460,20 +460,23 @@ class Reference_Command {
 
 				// Sanitize Structure
 				$exp  = explode( " ", $content['structure'] . ";" );
-				$word = '';
-				for ( $i = 0; $i < count( $exp ); $i ++ ) {
-					if ( $i == 0 ) {
-						$explode = explode( "( ", $exp[0] );
-						$word    .= self::color( $explode[0] . "( ", "Y" ) . self::color( $explode[1], "P" );
-					} else {
-						if ( stristr( $exp[ $i ], "," ) ) {
-							$explode = explode( ", ", $exp[ $i ] );
-							$word    .= self::color( $explode[0] . ", ", "Y" ) . self::color( $explode[1], "P" );
+				$word = self::color( $content['structure'], "Y" );
+				if ( stristr( $content['structure'], "(" ) != false ) {
+					$word = '';
+					for ( $i = 0; $i < count( $exp ); $i ++ ) {
+						if ( $i == 0 ) {
+							$explode = explode( "( ", $exp[0] );
+							$word    .= self::color( $explode[0] . "( ", "Y" ) . self::color( $explode[1], "P" );
 						} else {
-							$word .= self::color( $exp[ $i ], "Y" );
+							if ( stristr( $exp[ $i ], "," ) ) {
+								$explode = explode( ", ", $exp[ $i ] );
+								$word    .= self::color( $explode[0] . ", ", "Y" ) . self::color( $explode[1], "P" );
+							} else {
+								$word .= self::color( $exp[ $i ], "Y" );
+							}
 						}
+						$word .= " ";
 					}
-					$word .= " ";
 				}
 				WP_CLI::line( "  " . $word . "" );
 				self::br();
