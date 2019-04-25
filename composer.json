@@ -1,0 +1,33 @@
+{
+  "name": "mehrshaddarzi/wp-cli-reference-command",
+  "description": "Use WordPress Code Reference in WP-CLI.",
+  "homepage": "https://github.com/mehrshaddarzi/wp-cli-reference-command",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mehrshad Darzi",
+      "email": "mehrshad198@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "": "src/"
+    },
+    "files": [
+      "command.php"
+    ]
+  },
+  "require": {
+    "php": "^5.5 || ^7.0",
+    "ext-json": "*",
+    "ext-dom": "*"
+  },
+  "extra": {
+    "commands": [
+      "reference"
+    ]
+  },
+  "require-dev": {
+    "wp-cli/wp-cli": "^2.0"
+  }
+}
