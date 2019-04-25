@@ -79,7 +79,7 @@ wp reference --hook=admin_footer
 
 ### Show in Web Browser
 
-you can show WordPress reference code in Web browser after search with :
+you can show WordPress code reference in Web browser after search with :
 
 ````
 wp reference --browser
