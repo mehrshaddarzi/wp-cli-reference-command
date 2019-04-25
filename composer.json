@@ -1,6 +1,6 @@
 {
   "name": "mehrshaddarzi/wp-cli-reference-command",
-  "description": "Use WordPress Code Reference in WP-CLI.",
+  "description": "WordPress Code Reference Package for WP-CLI.",
   "homepage": "https://github.com/mehrshaddarzi/wp-cli-reference-command",
   "license": "MIT",
   "authors": [
