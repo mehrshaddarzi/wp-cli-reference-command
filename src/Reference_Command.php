@@ -569,7 +569,7 @@ class Reference_Command {
 			self::br();
 
 			// Get ID
-			self::create_table();
+			self::define_stdin();
 			while ( true ) {
 				echo $this->log['enter_id'];
 				$ID = fread( STDIN, 80 );
