@@ -63,7 +63,7 @@ Source    : wp-includes/functions.php:4283
 +---------+-------------+
 ```
 
-if your search results more than one item. 
+if your search results from more than one item.
 for example :
 
 ````
@@ -80,15 +80,15 @@ You will see a list to choose from.
 2. wp_create_user() [Function]
      Source: wp-includes/user.php:2113
       A simpler way of inserting a user into the database.
-      
-Please enter the number list : 
+
+Please type the number list and press enter key :
 ````
 
 ### Custom Search
 
 by default WP_CLI reference package search between all WordPress class and functions.
 
-if you want custom search :
+if you want the custom search :
 
 ````
 wp reference --class=wp_user
@@ -123,13 +123,13 @@ wp reference --browser
 
 ### Cache system
 
-by default WP-CLI cached 100 last searches for speed result. if you want remove reference cache :
+by default, WP-CLI cached 100 last searches for speed result. if you want to remove reference cache :
 
 ````
 wp cli cache clear
 ````
 
-if you want only removed reference cache :
+if you want only remove reference cache :
 
 ````
 wp reference --clear

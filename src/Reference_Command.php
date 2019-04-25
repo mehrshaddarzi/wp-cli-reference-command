@@ -125,7 +125,7 @@ class Reference_Command {
 	 */
 	public $log = array(
 		'remove_cache'         => "Cache cleared.",
-		'enter_id'             => "Please enter the number list: ",
+		'enter_id'             => "Please type the number list and press enter key: ",
 		'enter_search_keyword' => "Please enter search keyword. e.g : 'wp reference absint'.",
 		'not_found_id'         => "Your search ID is not found.",
 		'empty_search_history' => "Your search history is empty.",
