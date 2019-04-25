@@ -1,6 +1,7 @@
 {
   "name": "mehrshaddarzi/wp-cli-reference-command",
   "description": "WordPress Code Reference Package for WP-CLI.",
+  "type": "wp-cli-package",
   "homepage": "https://github.com/mehrshaddarzi/wp-cli-reference-command",
   "license": "MIT",
   "authors": [
@@ -29,5 +30,8 @@
   },
   "require-dev": {
     "wp-cli/wp-cli": "^2.0"
+  },
+  "support": {
+    "issues": "https://github.com/mehrshaddarzi/wp-cli-reference-command/issues"
   }
 }
