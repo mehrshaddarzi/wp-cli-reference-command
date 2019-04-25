@@ -6,7 +6,7 @@ Quick links: [Installation](#installation) | [Using](#using) | [Contributing](#c
 
 ## Installation
 
-you can install this package with `wp package install mehrshaddarzi/wp-cli-reference-command`.
+you can install this package with `wp package install mehrshaddarzi/wp-cli-reference-command`
 
 Installing this package requires WP-CLI v2 or greater. Update to the latest stable release with `wp cli update`.
 
