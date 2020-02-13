@@ -1,5 +1,7 @@
 # WP-CLI Reference Command
 
+[![Build Status](https://travis-ci.com/mehrshaddarzi/wp-cli-reference-command.svg?branch=master)](https://travis-ci.com/mehrshaddarzi/wp-cli-reference-command) ![Packagist Version](https://img.shields.io/packagist/v/mehrshaddarzi/wp-cli-reference-command) ![GitHub](https://img.shields.io/github/license/mehrshaddarzi/wp-cli-reference-command)
+
 WordPress Code Reference in WP-CLI.
 
 Quick links: [Installation](#installation) | [Using](#using) | [Contributing](#contributing)
