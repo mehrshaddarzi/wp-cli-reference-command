@@ -35,5 +35,8 @@
   },
   "support": {
     "issues": "https://github.com/mehrshaddarzi/wp-cli-reference-command/issues"
+  },
+  "scripts": {
+    "test": "phpunit"
   }
 }
