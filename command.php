@@ -1,8 +1,8 @@
 <?php
 
 # Check Exist WP-CLI
-if ( ! class_exists( 'WP_CLI' ) ) {
-	return;
+if ( ! class_exists('WP_CLI')) {
+    return;
 }
 
 /**
@@ -60,47 +60,42 @@ if ( ! class_exists( 'WP_CLI' ) ) {
  *
  * @when before_wp_load
  */
-\WP_CLI::add_command( 'reference', function ( $args, $assoc_args ) {
+\WP_CLI::add_command('reference', function ($args, $assoc_args) {
+    # init Reference Class
+    $reference = new Reference_Command();
 
-		# init Reference Class
-		$reference = new Reference_Command();
+    # Clear Cache
+    if (isset($assoc_args['clear'])) {
+        $reference->run_clear_cache();
+        # Show in browser
+    } elseif (isset($assoc_args['browser'])) {
+        $reference->run_browser();
+        # Search
+    } else {
+        //Prepare Word
+        $word = '';
+        if (isset($args[0])) {
+            $word = $args[0];
+        }
 
-		# Clear Cache
-		if ( isset( $assoc_args['clear'] ) ) {
-			$reference->run_clear_cache();
+        //Show Loading
+        WP_CLI_Helper::pl_wait_start();
 
-			# Show in browser
-		} elseif ( isset( $assoc_args['browser'] ) ) {
-			$reference->run_browser();
+        //Custom Search
+        $list          = array('function', 'class', 'hook', 'method');
+        $custom_search = false;
+        foreach ($list as $action) {
+            if (isset($assoc_args[$action])) {
+                $word = $assoc_args[$action];
+                $reference->run_search($word, array('source' => true, 'allowed_filter' => $action));
+                $custom_search = true;
+                break;
+            }
+        }
 
-			# Search
-		} else {
-
-			//Prepare Word
-			$word = '';
-			if ( isset( $args[0] ) ) {
-				$word = $args[0];
-			}
-
-			//Show Loading
-			Reference_Command::pl_wait_start();
-
-			//Custom Search
-			$list          = array( 'function', 'class', 'hook', 'method' );
-			$custom_search = false;
-			foreach ( $list as $action ) {
-				if ( isset( $assoc_args[ $action ] ) ) {
-					$word = $assoc_args[ $action ];
-					$reference->run_search( $word, array( 'source' => true, 'allowed_filter' => $action ) );
-					$custom_search = true;
-					break;
-				}
-			}
-
-			//Common Search
-			if ( ! $custom_search ) {
-				$reference->run_search( $word, array( 'source' => true ) );
-			}
-		}
-
-	} );
+        //Common Search
+        if ( ! $custom_search) {
+            $reference->run_search($word, array('source' => true));
+        }
+    }
+});

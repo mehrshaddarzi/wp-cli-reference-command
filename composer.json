@@ -20,16 +20,18 @@
   },
   "require": {
     "php": "^5.5 || ^7.0",
+    "wp-packagist/wp-cli-helper": "dev-master",
     "ext-json": "*",
     "ext-dom": "*"
+  },
+  "require-dev": {
+    "wp-cli/wp-cli": "^2.0",
+    "phpunit/phpunit": "^4.8"
   },
   "extra": {
     "commands": [
       "reference"
     ]
-  },
-  "require-dev": {
-    "wp-cli/wp-cli": "^2.0"
   },
   "support": {
     "issues": "https://github.com/mehrshaddarzi/wp-cli-reference-command/issues"
