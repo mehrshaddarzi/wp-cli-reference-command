@@ -4,7 +4,7 @@ namespace test\unit;
 
 use PHPUnit\Framework\TestCase;
 
-class ReferenceCommandTests extends TestCase
+class ReferenceCommandTest extends TestCase
 {
 
     /** @test */
