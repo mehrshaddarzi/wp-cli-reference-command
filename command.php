@@ -1,7 +1,7 @@
 <?php
 
 # Check Exist WP-CLI
-if ( ! class_exists('WP_CLI')) {
+if (! class_exists('WP_CLI')) {
     return;
 }
 
@@ -66,10 +66,10 @@ if ( ! class_exists('WP_CLI')) {
 
     # Clear Cache
     if (isset($assoc_args['clear'])) {
-        $reference->run_clear_cache();
+        $reference->runClearCache();
         # Show in browser
     } elseif (isset($assoc_args['browser'])) {
-        $reference->run_browser();
+        $reference->runBrowser();
         # Search
     } else {
         //Prepare Word
@@ -87,15 +87,15 @@ if ( ! class_exists('WP_CLI')) {
         foreach ($list as $action) {
             if (isset($assoc_args[$action])) {
                 $word = $assoc_args[$action];
-                $reference->run_search($word, array('source' => true, 'allowed_filter' => $action));
+                $reference->runSearch($word, array('source' => true, 'allowed_filter' => $action));
                 $custom_search = true;
                 break;
             }
         }
 
         //Common Search
-        if ( ! $custom_search) {
-            $reference->run_search($word, array('source' => true));
+        if (! $custom_search) {
+            $reference->runSearch($word, array('source' => true));
         }
     }
 });

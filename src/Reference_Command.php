@@ -145,26 +145,35 @@ class Reference_Command
 
     /**
      * Reference constructor.
+     *
+     * @param bool $cache
+     * @throws \WP_CLI\ExitException
      */
-    public function __construct()
+    public function __construct($cache = true)
     {
-        /*
+        /**
          * Check Active Dom Document in php Server
          */
-        if (! class_exists('DOMDocument')) {
+        if ( ! class_exists('DOMDocument')) {
             WP_CLI::error($this->log['DOMDocument']);
         }
-        /*
+        /**
          * Set Default Variable
          */
         $this->path                  = WP_CLI_FileSystem::path_join(WP_CLI_Helper::get_cache_dir(), $this->dir);
         $this->last_search_file_path = WP_CLI_FileSystem::path_join($this->path, $this->last_search_file);
+        /**
+         * Check Writable Cache dit
+         */
+        if ($cache) {
+            $this->checkWritableCacheDir();
+        }
     }
 
     /**
      * Remove Reference Cache.
      */
-    public function run_clear_cache()
+    public function runClearCache()
     {
         //Confirm Cli
         WP_CLI::confirm($this->log['confirm_remove_cache']);
@@ -182,15 +191,15 @@ class Reference_Command
      *
      * @throws \WP_CLI\ExitException
      */
-    public function run_browser()
+    public function runBrowser()
     {
         //Check Link ID
-        $json = $this->exist_link_ID(1, false);
+        $json = $this->existLinkID(1, false);
 
         //prepare url
         if ($json != false and is_array($json) and count($json) == 1) {
             $url = $json[1];
-            $this->remove_last_search_file();
+            $this->removeLastSearchFile();
         } else {
             $url = str_replace("[url]", self::$developer_wordpress, self::$reference_home_page);
         }
@@ -206,7 +215,7 @@ class Reference_Command
      * @param array $args
      * @throws \WP_CLI\ExitException
      */
-    public function run_search($search, $args = array())
+    public function runSearch($search, $args = array())
     {
         //Set Default Data
         $defaults = array(
@@ -216,28 +225,25 @@ class Reference_Command
         $arg      = WP_CLI_Util::parse_args($args, $defaults);
 
         //Sanitize Search Word
-        $search = $this->sanitize_search_word($search);
-
-        //Create Cache Folder
-        $this->create_cache_dir();
+        $search = $this->sanitizeSearchWord($search);
 
         //if exist last search file remove it.
-        $this->remove_last_search_file();
+        $this->removeLastSearchFile();
 
         //Generate Search Link
-        $url = $this->generate_search_link($search, $arg['allowed_filter'], $paged = 1);
+        $url = $this->generateSearchLink($search, $arg['allowed_filter'], $paged = 1);
 
         //Check Local Cache
-        $LocalCache = self::check_cache_url($url);
+        $LocalCache = self::checkCacheURL($url);
         if ($LocalCache != false) {
             //Get Last content
             $content = $LocalCache;
 
             //Generate Last Link
-            $last_link_data = $this->generate_last_link_file_data($content);
+            $last_link_data = $this->generateLastLinkFileData($content);
         } else {
             //Request Data From API
-            $response = $this->fetch_data($url);
+            $response = $this->fetchData($url);
             if ($response['status'] == "error") {
                 WP_CLI_Helper::pl_wait_end();
                 WP_CLI::error($this->log['connect']);
@@ -248,7 +254,7 @@ class Reference_Command
              * if status == redirect, This is a Single Page
              */
             if ($response['status'] == "redirect") {
-                $single_page_data = $this->get_single_page_data($response['url']);
+                $single_page_data = $this->getSinglePageData($response['url']);
                 $content          = $single_page_data['content'];
                 $last_link_data   = $single_page_data['last_link_data'];
             } else {
@@ -260,7 +266,7 @@ class Reference_Command
                     WP_CLI_Helper::pl_wait_end();
                     WP_CLI::error($this->log['dom']);
                 }
-                if ($this->is_404_page($dom) === true) {
+                if ($this->is404Page($dom) === true) {
                     WP_CLI_Helper::pl_wait_end();
                     WP_CLI::error($this->log['not_found']);
                     exit;
@@ -270,10 +276,10 @@ class Reference_Command
                  * Get Search List
                  */
                 //Check exist Pagination
-                $this->is_exist_pagination($dom);
+                $this->isExistPagination($dom);
 
                 //Get First Page Content
-                $content       = $this->get_search_list($dom);
+                $content       = $this->getSearchList($dom);
                 $number_result = count($content);
 
                 //If Page Pagination Exist
@@ -281,17 +287,17 @@ class Reference_Command
                     //Create Loop For Pagination
                     for ($paginate = 2; $paginate <= $this->max_page_request; $paginate++) {
                         //Create Page Link
-                        $paged_url = $this->generate_search_link($search, $arg['allowed_filter'], $paginate);
+                        $paged_url = $this->generateSearchLink($search, $arg['allowed_filter'], $paginate);
 
                         //Fetch Data
-                        $result = $this->fetch_data($paged_url);
+                        $result = $this->fetchData($paged_url);
                         if ($result['status'] == "data") {
                             //Get Dom Data
                             $dom = new DOMDocument;
                             @$dom->loadHTML($result['content']);
 
                             //Fetch this Page Data
-                            $this_page_content = $this->get_search_list($dom);
+                            $this_page_content = $this->getSearchList($dom);
 
                             //Push To All Item
                             foreach ($this_page_content as $key => $value) {
@@ -300,7 +306,7 @@ class Reference_Command
                             }
 
                             //Check if Last Page in Pagination
-                            if ($this->check_is_last_search_page($dom) === true) {
+                            if ($this->checkIsLastSearchPage($dom) === true) {
                                 break;
                             }
                         }
@@ -308,17 +314,17 @@ class Reference_Command
                 }
 
                 //Create Last Link Cache
-                $last_link_data = $this->generate_last_link_file_data($content);
+                $last_link_data = $this->generateLastLinkFileData($content);
             }
 
             //Create Cache file
             if (isset($content) and ! empty($content)) {
-                $this->create_cache_data($url, $content);
+                $this->createCacheData($url, $content);
             }
         }
 
         //Action end Process
-        $this->end_command_process($content, $last_link_data, $arg);
+        $this->endCommandProcess($content, $last_link_data, $arg);
     }
 
     /**
@@ -327,22 +333,19 @@ class Reference_Command
      * @param $url
      * @throws \WP_CLI\ExitException
      */
-    private function single_page_command($url)
+    private function singlePageCommand($url)
     {
-        //Create Cache Folder
-        $this->create_cache_dir();
-
         //Check Local Cache
-        $LocalCache = self::check_cache_url($url);
+        $LocalCache = self::checkCacheURL($url);
         if ($LocalCache != false) {
             //Get Last content
             $content = $LocalCache;
 
             //Generate Last Link
-            $last_link_data = $this->generate_last_link_file_data($content);
+            $last_link_data = $this->generateLastLinkFileData($content);
         } else {
             //Request Data From API
-            $response = $this->fetch_data($url);
+            $response = $this->fetchData($url);
             if ($response['status'] == "error") {
                 WP_CLI_Helper::pl_wait_end();
                 WP_CLI::error($this->log['connect']);
@@ -352,18 +355,18 @@ class Reference_Command
             /*
              * This is a Single Page
              */
-            $single_page_data = $this->get_single_page_data($url);
+            $single_page_data = $this->getSinglePageData($url);
             $content          = $single_page_data['content'];
             $last_link_data   = $single_page_data['last_link_data'];
 
             //Create Cache file
             if (isset($content) and ! empty($content)) {
-                $this->create_cache_data($url, $content);
+                $this->createCacheData($url, $content);
             }
         }
 
         //Action end Process
-        $this->end_command_process($content, $last_link_data);
+        $this->endCommandProcess($content, $last_link_data);
     }
 
     /**
@@ -373,7 +376,7 @@ class Reference_Command
      * @return string
      * @throws \WP_CLI\ExitException
      */
-    private function sanitize_search_word($search)
+    private function sanitizeSearchWord($search)
     {
         //Sanitize Search Content
         $word = preg_replace('/[^a-zA-Z0-9]/', '', $search);
@@ -392,7 +395,7 @@ class Reference_Command
      * @param $content
      * @return array
      */
-    private function generate_last_link_file_data($content)
+    private function generateLastLinkFileData($content)
     {
         if (isset($content['structure'])) {
             //this is a alone page Method
@@ -416,10 +419,10 @@ class Reference_Command
      * @param array $options
      * @throws \WP_CLI\ExitException
      */
-    private function end_command_process($content, $last_link_data, $options = array())
+    private function endCommandProcess($content, $last_link_data, $options = array())
     {
         //Start Clean Cache system
-        $this->remove_dynamic_cache_file();
+        $this->removeDynamicCacheFile();
 
         //Create Last Link Data
         if (isset($last_link_data)) {
@@ -429,7 +432,7 @@ class Reference_Command
         //Show Result
         WP_CLI_Helper::pl_wait_end();
         if (isset($content) and ! empty($content)) {
-            $this->show_result_command($content, $options);
+            $this->showResultCommand($content, $options);
         } else {
             WP_CLI::error($this->log['dom']);
         }
@@ -442,7 +445,7 @@ class Reference_Command
      * @param array $options
      * @throws \WP_CLI\ExitException
      */
-    private function show_result_command($content, $options = array())
+    private function showResultCommand($content, $options = array())
     {
         //Check is Search list or Post
         if (isset($content['structure'])) {
@@ -464,16 +467,16 @@ class Reference_Command
                         if ($i == 0) {
                             $explode = explode("( ", $exp[0]);
                             $word    .= WP_CLI_Helper::color(
-                                $explode[0] . "( ",
-                                "Y"
-                            ) . WP_CLI_Helper::color($explode[1], "P");
+                                    $explode[0] . "( ",
+                                    "Y"
+                                ) . WP_CLI_Helper::color($explode[1], "P");
                         } else {
                             if (stristr($exp[$i], ",")) {
                                 $explode = explode(", ", $exp[$i]);
                                 $word    .= WP_CLI_Helper::color(
-                                    $explode[0] . ", ",
-                                    "Y"
-                                ) . WP_CLI_Helper::color($explode[1], "P");
+                                        $explode[0] . ", ",
+                                        "Y"
+                                    ) . WP_CLI_Helper::color($explode[1], "P");
                             } else {
                                 $word .= WP_CLI_Helper::color($exp[$i], "Y");
                             }
@@ -524,10 +527,7 @@ class Reference_Command
                     WP_CLI::line(" " . WP_CLI_Helper::color($k_param, "Y"));
 
                     //Show Param Option
-                    WP_CLI::line("  " . WP_CLI_Helper::color(
-                        "(" . $v_param['type'] . ")",
-                        "P"
-                    ) . " " . WP_CLI_Helper::color("{" . $v_param['required'] . "}", "B"));
+                    WP_CLI::line("  " . WP_CLI_Helper::color("(" . $v_param['type'] . ")", "P") . " " . WP_CLI_Helper::color("{" . $v_param['required'] . "}", "B"));
 
                     //Show Desc
                     WP_CLI::line("    " . $v_param['description']);
@@ -566,10 +566,7 @@ class Reference_Command
             //Search List Page
             WP_CLI_Helper::br();
             foreach ($content as $_s_key => $_s_value) {
-                WP_CLI::line("{$_s_key}. " . WP_CLI_Helper::color(
-                    $_s_value['title'],
-                    "Y"
-                ) . " " . WP_CLI_Helper::color("[" . ucfirst($_s_value['type']) . "]", "B"));
+                WP_CLI::line("{$_s_key}. " . WP_CLI_Helper::color($_s_value['title'], "Y") . " " . WP_CLI_Helper::color("[" . ucfirst($_s_value['type']) . "]", "B"));
                 WP_CLI::line(WP_CLI_Helper::color("     Source: " . $_s_value['file'] . ":" . $_s_value['line'], "P"));
                 WP_CLI::line("      " . $_s_value['desc']);
                 WP_CLI_Helper::br();
@@ -587,11 +584,11 @@ class Reference_Command
             }
             if (isset($ID)) {
                 $ID   = (int)$ID;
-                $json = $this->read_last_link_file();
+                $json = $this->readLastLinkFile();
                 if (array_key_exists($ID, $json)) {
                     //Show Document
                     WP_CLI_Helper::pl_wait_start();
-                    $this->single_page_command($json[$ID]);
+                    $this->singlePageCommand($json[$ID]);
                 }
             }
         }
@@ -604,10 +601,10 @@ class Reference_Command
      * @return array
      * @throws \WP_CLI\ExitException
      */
-    private function get_single_page_data($url)
+    private function getSinglePageData($url)
     {
         //Request again For Get Data
-        $result = $this->fetch_data($url);
+        $result = $this->fetchData($url);
 
         //Check Error in connecting
         if ($result['status'] == "error") {
@@ -620,8 +617,8 @@ class Reference_Command
             }
 
             //Get Page Data
-            $content = $this->get_page_document($dom, $url);
-            return array('content' => $content, 'last_link_data' => $this->generate_last_link_file_data($content));
+            $content = $this->getPageDocument($dom, $url);
+            return array('content' => $content, 'last_link_data' => $this->generateLastLinkFileData($content));
         }
     }
 
@@ -633,7 +630,7 @@ class Reference_Command
      * @param int $paged
      * @return mixed|string
      */
-    private function generate_search_link($search, $allowed_filter = false, $paged = 1)
+    private function generateSearchLink($search, $allowed_filter = false, $paged = 1)
     {
         //Check String $allowed_filter
         if ($allowed_filter != false and is_string($allowed_filter)) {
@@ -670,10 +667,10 @@ class Reference_Command
      * @return bool
      * @throws \WP_CLI\ExitException
      */
-    private function exist_link_ID($ID, $log = true)
+    private function existLinkID($ID, $log = true)
     {
         //Read Last Link file
-        $json = $this->read_last_link_file($log);
+        $json = $this->readLastLinkFile($log);
 
         //Check exist ID
         if ($json != false and is_array($json) and array_key_exists($ID, $json)) {
@@ -694,10 +691,10 @@ class Reference_Command
      * @return array|bool
      * @throws \WP_CLI\ExitException
      */
-    private function read_last_link_file($log = true)
+    private function readLastLinkFile($log = true)
     {
         //Check Exist Last Link File
-        if (! file_exists($this->last_search_file_path)) {
+        if ( ! file_exists($this->last_search_file_path)) {
             if ($log) {
                 WP_CLI::error($this->log['empty_search_history']);
             } else {
@@ -724,7 +721,7 @@ class Reference_Command
      *
      * @param $html_dom
      */
-    private function is_exist_pagination($html_dom)
+    private function isExistPagination($html_dom)
     {
         $nav = $html_dom->getElementsByTagName('nav');
         $i   = 0;
@@ -743,7 +740,7 @@ class Reference_Command
      * @param $html_dom
      * @return bool
      */
-    private function check_is_last_search_page($html_dom)
+    private function checkIsLastSearchPage($html_dom)
     {
         //If Page is not Pagination
         if ($this->is_pagination === false) {
@@ -770,7 +767,7 @@ class Reference_Command
      * @param $html_dom
      * @return bool
      */
-    private function is_404_page($html_dom)
+    private function is404Page($html_dom)
     {
         $is_not_found = false;
         $section      = $html_dom->getElementsByTagName('section');
@@ -790,7 +787,7 @@ class Reference_Command
      * @param $link
      * @return mixed|string
      */
-    private static function convert_link_to_file($link)
+    private static function convertLinkToFile($link)
     {
         //Trim Last slash
         $link = rtrim($link, "/");
@@ -811,19 +808,9 @@ class Reference_Command
     }
 
     /**
-     * Create Cache Folder
-     */
-    private function create_cache_dir()
-    {
-        if (! WP_CLI_FileSystem::folder_exist($this->path)) {
-            WP_CLI_FileSystem::create_dir($this->dir, WP_CLI_Helper::get_cache_dir());
-        }
-    }
-
-    /**
      * Remove Last Search File
      */
-    private function remove_last_search_file()
+    private function removeLastSearchFile()
     {
         if (file_exists($this->last_search_file_path)) {
             WP_CLI_FileSystem::remove_file($this->last_search_file_path);
@@ -836,10 +823,10 @@ class Reference_Command
      * @param $url
      * @return bool|array
      */
-    private function check_cache_url($url)
+    private function checkCacheURL($url)
     {
         //convert Url to File name
-        $file_name = self::convert_link_to_file($url);
+        $file_name = self::convertLinkToFile($url);
 
         //Search in files
         $file_path = WP_CLI_FileSystem::path_join($this->path, $file_name . ".json");
@@ -857,10 +844,10 @@ class Reference_Command
      * @param $data
      * @return bool
      */
-    private function create_cache_data($url, $data)
+    private function createCacheData($url, $data)
     {
         //convert Url to File name
-        $file_name = self::convert_link_to_file($url);
+        $file_name = self::convertLinkToFile($url);
 
         //Create Cache File data
         $file_path = WP_CLI_FileSystem::path_join($this->path, $file_name . ".json");
@@ -874,7 +861,7 @@ class Reference_Command
     /**
      * Remove Dynamic Cache File according to Max history file
      */
-    private function remove_dynamic_cache_file()
+    private function removeDynamicCacheFile()
     {
         //Get list of file according to Date Create
         $list_of_cache_file = WP_CLI_FileSystem::sort_dir_by_date($this->path, "ASC");
@@ -900,7 +887,7 @@ class Reference_Command
      * @param $dom
      * @return array
      */
-    private function get_search_list($dom)
+    private function getSearchList($dom)
     {
         //Create Empty List Obj
         $result = array();
@@ -955,7 +942,7 @@ class Reference_Command
      * @param $url
      * @return array|bool
      */
-    private function get_page_document($dom, $url)
+    private function getPageDocument($dom, $url)
     {
         $main = $dom->getElementsByTagName('main');
         if (isset($dom) and $main->length > 0) {
@@ -966,34 +953,34 @@ class Reference_Command
             $document['page_url'] = $url;
 
             //Type of this method
-            $document['type'] = self::get_type_of_code($url);
+            $document['type'] = self::getTypeOfCode($url);
 
             //Get structure
             $document['structure'] = str_ireplace(
                 "&nbsp;",
                 " ",
-                self::get_tag_content($articles->getElementsByTagName("h1")->item(0))
+                self::getTagContent($articles->getElementsByTagName("h1")->item(0))
             );
 
             //Get Summary
-            $document['summary'] = self::get_tag_content($articles->getElementsByTagName("section")->item(0)->getElementsByTagName("p")->item(0));
+            $document['summary'] = self::getTagContent($articles->getElementsByTagName("section")->item(0)->getElementsByTagName("p")->item(0));
 
             //Check Content
-            $content_dom = self::get_tags_with_class($articles->getElementsByTagName("div"), "content-toc");
-            if (! is_null($content_dom)) {
+            $content_dom = self::getTagsWithClass($articles->getElementsByTagName("div"), "content-toc");
+            if ( ! is_null($content_dom)) {
                 //Get Description
-                $desc_dom = self::get_tags_with_class($content_dom->getElementsByTagName("section"), "description");
-                if (! is_null($desc_dom)) {
-                    $document['description'] = self::get_tag_html($dom->saveXML($desc_dom));
+                $desc_dom = self::getTagsWithClass($content_dom->getElementsByTagName("section"), "description");
+                if ( ! is_null($desc_dom)) {
+                    $document['description'] = self::getTagHtml($dom->saveXML($desc_dom));
                 }
 
                 //Get Source File
-                $source_dom = self::get_tags_with_class(
+                $source_dom = self::getTagsWithClass(
                     $content_dom->getElementsByTagName("section"),
                     "source-content"
                 );
-                if (! is_null($source_dom)) {
-                    if (self::exist_tag($source_dom->getElementsByTagName("p"))) {
+                if ( ! is_null($source_dom)) {
+                    if (self::existTag($source_dom->getElementsByTagName("p"))) {
                         $document['source'] = array();
 
                         //Get Source file
@@ -1001,18 +988,18 @@ class Reference_Command
                         if (trim(strtolower($source_dom->getElementsByTagName("p")->item(0)->getAttribute("class"))) == "toc-jump") {
                             $p_ID = 1;
                         }
-                        $document['source']['file'] = self::remove_whitespace_word(str_ireplace(
+                        $document['source']['file'] = self::removeWhitespaceWord(str_ireplace(
                             "file: ",
                             "",
-                            self::get_tag_content($source_dom->getElementsByTagName("p")->item($p_ID))
+                            self::getTagContent($source_dom->getElementsByTagName("p")->item($p_ID))
                         ));
 
                         //Get First Line
-                        $gutter = self::get_tags_with_class(
+                        $gutter = self::getTagsWithClass(
                             $source_dom->getElementsByTagName("div"),
                             "source-code-container"
                         );
-                        if (! is_null($gutter)) {
+                        if ( ! is_null($gutter)) {
                             //Get PRE information
                             $pre                        = $gutter->getElementsByTagName("pre")->item(0)->getAttribute("class");
                             $exp_pre                    = explode("first-line:", $pre);
@@ -1022,16 +1009,16 @@ class Reference_Command
                 }
 
                 //Get Parameters
-                $param_dom = self::get_tags_with_class($content_dom->getElementsByTagName("section"), "parameters");
-                if (! is_null($param_dom)) {
+                $param_dom = self::getTagsWithClass($content_dom->getElementsByTagName("section"), "parameters");
+                if ( ! is_null($param_dom)) {
                     $dl_list = $param_dom->getElementsByTagName("dl");
-                    if (self::exist_tag($dl_list)) {
+                    if (self::existTag($dl_list)) {
                         $dt         = $dl_list->item(0)->getElementsByTagName("dt");
                         $dd         = $dl_list->item(0)->getElementsByTagName("dd");
                         $param_key  = array();
                         $param_desc = array();
                         foreach ($dt as $dt_list) {
-                            $param_key[] = self::get_tag_content($dt_list);
+                            $param_key[] = self::getTagContent($dt_list);
                         }
                         foreach ($dd as $dd_list) {
                             $param_array = array(
@@ -1043,40 +1030,40 @@ class Reference_Command
                             $get_p       = $dd_list->getElementsByTagName("p")->item(0);
 
                             //Check Type
-                            $type_dom = self::get_tags_with_class($get_p->getElementsByTagName("span"), "type");
-                            if (! is_null($type_dom)) {
-                                $param_array['type'] = self::remove_parentheses(self::get_tag_content($type_dom));
+                            $type_dom = self::getTagsWithClass($get_p->getElementsByTagName("span"), "type");
+                            if ( ! is_null($type_dom)) {
+                                $param_array['type'] = self::removeParentheses(self::getTagContent($type_dom));
                             }
 
                             //Check Required
-                            $require_dom = self::get_tags_with_class($get_p->getElementsByTagName("span"), "required");
-                            if (! is_null($require_dom)) {
-                                $param_array['required'] = self::remove_parentheses(self::get_tag_content($require_dom));
+                            $require_dom = self::getTagsWithClass($get_p->getElementsByTagName("span"), "required");
+                            if ( ! is_null($require_dom)) {
+                                $param_array['required'] = self::removeParentheses(self::getTagContent($require_dom));
                             }
 
                             //Check Desc every item
-                            $param_desc_dom = self::get_tags_with_class(
+                            $param_desc_dom = self::getTagsWithClass(
                                 $get_p->getElementsByTagName("span"),
                                 "description"
                             );
-                            if (! is_null($param_desc_dom)) {
-                                $param_array['description'] = self::remove_whitespace_word(self::get_tag_content($param_desc_dom));
+                            if ( ! is_null($param_desc_dom)) {
+                                $param_array['description'] = self::removeWhitespaceWord(self::getTagContent($param_desc_dom));
                             }
 
                             //Check arg params
-                            if (self::exist_tag($dd_list->getElementsByTagName("ul"))) {
+                            if (self::existTag($dd_list->getElementsByTagName("ul"))) {
                                 $internal_param_dom = $dd_list->getElementsByTagName("ul")->item(0)->getElementsByTagName("li");
                                 if (isset($internal_param_dom)) {
                                     $internal_param = array();
                                     foreach ($internal_param_dom as $li) {
                                         $p_name                  = trim(
-                                            self::get_tag_content($li->getElementsByTagName("b")->item(0)),
+                                            self::getTagContent($li->getElementsByTagName("b")->item(0)),
                                             "'"
                                         );
-                                        $p_type                  = self::remove_parentheses(self::get_tag_content($li->getElementsByTagName("i")->item(0)));
+                                        $p_type                  = self::removeParentheses(self::getTagContent($li->getElementsByTagName("i")->item(0)));
                                         $exp_desc                = explode(
                                             "(" . $p_type . ")",
-                                            self::get_tag_content($li)
+                                            self::getTagContent($li)
                                         );
                                         $internal_param[$p_name] = array(
                                             'type' => $p_type,
@@ -1112,25 +1099,25 @@ class Reference_Command
                 }
 
                 //Get Return
-                $return_dom = self::get_tags_with_class($content_dom->getElementsByTagName("section"), "return");
-                if (! is_null($return_dom)) {
-                    if (self::exist_tag($return_dom->getElementsByTagName("p"))) {
+                $return_dom = self::getTagsWithClass($content_dom->getElementsByTagName("section"), "return");
+                if ( ! is_null($return_dom)) {
+                    if (self::existTag($return_dom->getElementsByTagName("p"))) {
                         $document['return']         = array();
-                        $return_type                = self::get_tag_content($return_dom->getElementsByTagName("p")->item(1)->getElementsByTagName("span")->item(0));
-                        $document['return']['type'] = self::remove_parentheses($return_type);
+                        $return_type                = self::getTagContent($return_dom->getElementsByTagName("p")->item(1)->getElementsByTagName("span")->item(0));
+                        $document['return']['type'] = self::removeParentheses($return_type);
                         $exp_desc                   = explode(
                             $return_type,
-                            self::get_tag_content($return_dom->getElementsByTagName("p")->item(1))
+                            self::getTagContent($return_dom->getElementsByTagName("p")->item(1))
                         );
-                        $document['return']['desc'] = self::remove_whitespace_word($exp_desc[1]);
+                        $document['return']['desc'] = self::removeWhitespaceWord($exp_desc[1]);
                     }
                 }
 
                 //Get Changelog
-                $changelog_dom = self::get_tags_with_class($content_dom->getElementsByTagName("section"), "changelog");
-                if (! is_null($changelog_dom)) {
-                    if (self::exist_tag($changelog_dom->getElementsByTagName("table"))) {
-                        $document['changelog'] = self::get_table_content($changelog_dom->getElementsByTagName("table")->item(0));
+                $changelog_dom = self::getTagsWithClass($content_dom->getElementsByTagName("section"), "changelog");
+                if ( ! is_null($changelog_dom)) {
+                    if (self::existTag($changelog_dom->getElementsByTagName("table"))) {
+                        $document['changelog'] = self::getTableContent($changelog_dom->getElementsByTagName("table")->item(0));
                     }
                 }
 
@@ -1149,7 +1136,7 @@ class Reference_Command
      * @return array|boolean
      * @throws \WP_CLI\ExitException
      */
-    private function fetch_data($url)
+    private function fetchData($url)
     {
         # Request Header
         $headers = array('Accept' => 'application/json');
@@ -1172,7 +1159,7 @@ class Reference_Command
      * @param $class
      * @return bool
      */
-    private static function get_tags_with_class($dom, $class)
+    private static function getTagsWithClass($dom, $class)
     {
         $i = 0;
         foreach ($dom as $element) {
@@ -1192,7 +1179,7 @@ class Reference_Command
      * @param $tag | $dom->getElementsByTagName( 'main' )
      * @return bool
      */
-    private static function exist_tag($tag)
+    private static function existTag($tag)
     {
         if (isset($tag) and $tag->length > 0) {
             return true;
@@ -1208,7 +1195,7 @@ class Reference_Command
      * @param bool $strip
      * @return string
      */
-    private static function get_tag_content($tag, $strip = false)
+    private static function getTagContent($tag, $strip = false)
     {
         $content = @ $tag->textContent;
         if ($strip) {
@@ -1224,7 +1211,7 @@ class Reference_Command
      * @param $xml
      * @return string
      */
-    private static function get_tag_html($xml)
+    private static function getTagHtml($xml)
     {
         //Remove Tags With inner Content
         $tags = array("h2", "i");
@@ -1233,7 +1220,7 @@ class Reference_Command
         //Stripe Certain Tag
         $tags = array("code", "a", "section");
         foreach ($tags as $tag) {
-            $text = self::strip_single_tag($text, $tag);
+            $text = self::stripSingleTag($text, $tag);
         }
 
         //Add line Break
@@ -1241,7 +1228,7 @@ class Reference_Command
         $text = preg_replace("/<\/li>/", '</li>\n', $text);
 
         //Stripe All Tag
-        $text = trim(self::remove_whitespace_word(strip_tags($text)));
+        $text = trim(self::removeWhitespaceWord(strip_tags($text)));
 
         //Trim Right \n\n
         $text = rtrim($text, '\n\n');
@@ -1254,7 +1241,7 @@ class Reference_Command
      * @param $content
      * @return string
      */
-    private static function remove_parentheses($content)
+    private static function removeParentheses($content)
     {
         return str_ireplace(array("(", ")"), "", $content);
     }
@@ -1264,7 +1251,7 @@ class Reference_Command
      * @param $content
      * @return null|string|string[]
      */
-    private static function remove_whitespace_word($content)
+    private static function removeWhitespaceWord($content)
     {
         return preg_replace('/\s\s+/', ' ', $content);
     }
@@ -1274,7 +1261,7 @@ class Reference_Command
      * @param $tables
      * @return array
      */
-    private static function get_table_content($tables)
+    private static function getTableContent($tables)
     {
         //Create Empty object
         $tbl = array();
@@ -1282,7 +1269,7 @@ class Reference_Command
         //First Get th of table
         $th = $tables->getElementsByTagName('thead')->item(0)->getElementsByTagName('tr')->item(0)->getElementsByTagName('th');
         foreach ($th as $title) {
-            $tbl['thead'][] = self::get_tag_content($title);
+            $tbl['thead'][] = self::getTagContent($title);
         }
 
         //Get table Content
@@ -1291,7 +1278,7 @@ class Reference_Command
             $cols        = $row->getElementsByTagName('td');
             $row_content = array();
             for ($i = 0; $i < count($tbl['thead']); $i++) {
-                $row_content[$tbl['thead'][$i]] = self::remove_whitespace_word(self::get_tag_content($cols->item($i)));
+                $row_content[$tbl['thead'][$i]] = self::removeWhitespaceWord(self::getTagContent($cols->item($i)));
             }
             $tbl['tbody'][] = $row_content;
         }
@@ -1306,7 +1293,7 @@ class Reference_Command
      * @return string
      * function - action - filter - class - method
      */
-    private static function get_type_of_code($link)
+    private static function getTypeOfCode($link)
     {
         //Check is Hook
         if (stristr($link, "/hooks/") != false) {
@@ -1334,10 +1321,30 @@ class Reference_Command
      * @param $tag
      * @return null|string|string[]
      */
-    private static function strip_single_tag($str, $tag)
+    private static function stripSingleTag($str, $tag)
     {
         $str = preg_replace('/<' . $tag . '[^>]*>/i', '', $str);
         $str = preg_replace('/<\/' . $tag . '>/i', '', $str);
         return $str;
+    }
+
+    /**
+     * Check Writable Cache Dir
+     *
+     * @throws \WP_CLI\ExitException
+     */
+    public function checkWritableCacheDir()
+    {
+        if (\WP_CLI_FileSystem::folder_exist($this->path) === false) {
+            if ( ! @mkdir($this->path, 0777, true)) {
+                $error = error_get_last();
+                \WP_CLI_Helper::error("Failed to create directory '" . \WP_CLI_Helper::color($this->path, "Y") . "': " . \WP_CLI_Helper::color($error['message'], "R"), true);
+            }
+        } else {
+            $_is_writable = \WP_CLI_FileSystem::is_writable($this->path);
+            if ($_is_writable['status'] === false) {
+                \WP_CLI_Helper::error(\WP_CLI_Helper::color($this->path, "Y") . " is not writable by current user.", true);
+            }
+        }
     }
 }
